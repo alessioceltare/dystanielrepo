@@ -39,9 +39,6 @@ local service = setmetatable({}, {
 			or settings():GetService(serviceName)
 			or UserSettings():GetService(serviceName)
 
-		-- if cloneref then
-		-- 	Service = cloneref(Service)
-		-- end
 		if Service then
 			self[serviceName] = Service
 		end
@@ -146,11 +143,15 @@ local function sanitize_source(src)
     return src
 end
 
-if not compile_fn then
-    -- No compile function available in this environment; can't validate.
-    warn("UniversalSynSaveInstance: syntax validator not available (no loadstring/load). Skipping syntax check.")
-    return true, nil
-else
+-- Moved the validation logic into a proper function
+local function validate_syntax(src, compile_fn)
+    if not compile_fn then
+        -- No compile function available in this environment; can't validate.
+        -- Accept the source but warn so the user knows we couldn't check syntax.
+        warn("UniversalSynSaveInstance: syntax validator not available (no loadstring/load). Skipping syntax check.")
+        return true, nil
+    end
+
     local ok, fnOrErr = pcall(compile_fn, src)
     if ok and type(fnOrErr) == "function" then
         return true, nil
@@ -207,45 +208,4 @@ local CLIENT_VERSION = tonumber(string.match(FULL_VERSION, "%d+%.(%d+)")) or 9e9
 local __BREAK = "__BREAK" .. service.HttpService:GenerateGUID(false)
 
 local Attribute_Type_Ids =
-	{ -- ValueCurveKey & StyleRule.PropertiesSerialize can be used to explore types unsupported by attributes, as they share the same serializer
-		["nil"] = 0x01,
-		string = 0x02,
-		boolean = 0x03,
-		int32 = 0x04,
-		-- float = 0x05, -- float32
-		number = 0x06, -- float64 (double)
-		ValueArray = 0x07,
-		ValueTable = 0x08, -- Dictionary
-		UDim = 0x09,
-		UDim2 = 0x0A,
-		Ray = 0x0B,
-		Faces = 0x0C,
-		Axes = 0x0D,
-		BrickColor = 0x0E,
-		Color3 = 0x0F,
-		Vector2 = 0x10,
-		Vector3 = 0x11,
-		Vector2int16 = 0x12,
-		Vector3int16 = 0x13,
-		CFrame = 0x14,
-		EnumItem = 0x15,
-		-- 0x16
-		NumberSequence = 0x17,
-		NumberSequenceKeypoint = 0x18,
-		ColorSequence = 0x19,
-		ColorSequenceKeypoint = 0x1A,
-		NumberRange = 0x1B,
-		Rect = 0x1C,
-		PhysicalProperties = 0x1D,
-		Color3uint8 = 0x1E,
-		Region3 = 0x1F,
-		Region3int16 = 0x20,
-		Font = 0x21,
-		SecurityCapabilities = 0x22,
-		Path2DControlPoint = 0x23,
-		TweenInfo = 0x24,
-		-- InstanceHandle = 0x25,
-		-- Path3DControlPoint = 0x26, -- ? not sure
-	}
-
-
+	{ -- ValueCurveKey & StyleRule.Properties
