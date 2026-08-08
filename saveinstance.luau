@@ -1,4 +1,3 @@
-<?lua
 --!native
 --!optimize 2
 --!divine-intellect
