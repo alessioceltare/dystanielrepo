@@ -146,15 +146,19 @@ local function sanitize_source(src)
     return src
 end
 
-local function check_syntax(src)
-    if not src or src == "" then return false, "empty" end
-    -- loadstring compiles but does not execute; pcall to catch compile errors
-    local ok, fnOrErr = pcall(loadstring, src)
-    if ok and type(fnOrErr) == "function" then
-        return true, nil
-    end
-    return false, tostring(fnOrErr)
+if not compile_fn then
+    -- No compile function available in this environment; can't validate.
+    -- Accept the source but warn so the user knows we couldn't check syntax.
+    warn("UniversalSynSaveInstance: syntax validator not available (no loadstring/load). Skipping syntax check.")
+    return true, nil
 end
+
+local ok, fnOrErr = pcall(compile_fn, src)
+if ok and type(fnOrErr) == "function" then
+    return true, nil
+end
+
+return false, tostring(fnOrErr)
 
 local sharedStringId = 1e15 -- 1 quadrillion, up to 9.(9) quadrillion, in theory this shouldn't ever run out and be enough for all sharedstrings ever imaginable 	-- TODO: worst case, add fallback [...]
 local sharedStrings = setmetatable({}, {
